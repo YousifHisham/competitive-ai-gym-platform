@@ -8,27 +8,65 @@
 
 A competitive fitness tracking social platform where athletes log workouts, earn scores based on consistency/volume/intensity, compete on category-specific leaderboards, get personalized AI coaching and nutrition advice through a conversational RAG-powered chat, and share progress on a social feed.
 
-## Feature Decomposition
+## Build Strategy — 3 Monthly Phases
 
-The platform is too large for a single implementation cycle. It is decomposed into 6 features, each with its own spec/plan/implement cycle, built in dependency order:
+The full system design (below) is the north star. Implementation is split into 3 monthly phases, each independently deployable and testable. Each phase builds on the previous one without rewriting.
 
-| # | Feature | Deliverable | Phase |
-|---|---------|-------------|-------|
-| 001 | User Auth & Profiles | Registration, JWT login, athlete profiles with category, body stats | Backend |
-| 002 | Workout Logging & Exercise Library | Exercise database, custom templates, manual logging, workout history | Backend |
-| 003 | Scoring Engine & Leaderboards | Category-specific scoring algorithm, global leaderboards | Backend + ML |
-| 004 | AI Coach & Nutritionist (RAG) | Conversational AI chat, RAG knowledge base, adaptive recommendations | Backend + ML |
-| 005 | Social Feed & Interactions | Follow system, workout posts, likes, comments | Backend |
-| 006 | Frontend | React app — dashboard, logging, leaderboard, coach chat, feed | Full Stack |
+### Phase 1 — Core Backend (Month 1)
 
-### Why this order
+**Goal**: Build the foundational backend system. Master request/response lifecycle, database relationships, API design, and separation of concerns.
 
-- 001 is foundational — everything needs users
-- 002 is the core data — can't score or coach without workouts
-- 003 makes it competitive — the differentiator
-- 004 adds AI value — needs workout data to be meaningful
-- 005 adds social — needs all the above to have content worth sharing
-- 006 ties it all together — backend-first per constitution Principle X
+| Feature | Scope |
+|---------|-------|
+| User Auth & Profiles | Registration, login, JWT access tokens, athlete profiles with category and body stats |
+| Exercise Library | Exercise database with difficulty ratings, muscle groups, exercise types |
+| Workout Logging | Log workouts with exercise details (sets/reps/weight, distance/pace, duration), workout history, edit/delete |
+| Simple Scoring | Volume-based scoring only: `sum(sets × reps × weight × difficulty)` for strength, `sum(distance × pace_multiplier)` for cardio. Per-user, per-category. |
+
+**Out of scope**: Refresh tokens, full scoring formula (consistency/intensity), leaderboards, RAG, pgvector, social feed, frontend.
+
+**Deliverable**: A working FastAPI backend where users can register, log workouts, browse exercises, and see a simple volume score. Testable via Swagger UI.
+
+### Phase 2 — Scoring, Leaderboards & ML (Month 2)
+
+**Goal**: Introduce data processing, algorithmic scoring, and machine learning. Reinforce data modeling and algorithmic thinking.
+
+| Feature | Scope |
+|---------|-------|
+| Full Scoring System | Add consistency (35%) and intensity (30%) components, category-specific normalization, recalculation triggers on edit/delete |
+| Leaderboard System | Global leaderboards filtered by category and period (weekly/monthly/all_time), pre-calculated scores |
+| Basic ML | Simple predictive models on workout data (plateau detection, progress prediction) — no RAG yet |
+| Analytics | User stats and trends: streak tracking, volume over time, per-exercise progress |
+
+**Deliverable**: Users compete on leaderboards, see their score breakdown, get basic ML-driven insights on their training data.
+
+### Phase 3 — Frontend, AI Coach & Social (Month 3)
+
+**Goal**: Build the full user-facing system. Integrate all components into a complete application.
+
+| Feature | Scope |
+|---------|-------|
+| React Frontend | Dashboard, workout logging UI, leaderboard, profile pages, coach chat interface, social feed |
+| RAG AI Coach | Conversational chat, pgvector knowledge base (exercise/nutrition/training science), adaptive recommendations using workout history |
+| Social Feed | Follow system, workout posts with scores, likes, comments, chronological feed |
+| Advanced Auth | Refresh token rotation, logout/revocation |
+| Production Polish | Health checks, deployment configuration, error handling hardening |
+
+**Deliverable**: A complete, deployable platform with frontend, AI coaching, social features, and production-grade auth.
+
+### Feature-to-Phase Mapping
+
+| # | Feature | Phase |
+|---|---------|-------|
+| 001 | User Auth (basic JWT) | 1 |
+| 002 | Exercise Library & Workout Logging | 1 |
+| 003a | Simple Volume Scoring | 1 |
+| 003b | Full Scoring & Leaderboards | 2 |
+| 003c | ML Analytics | 2 |
+| 004 | AI Coach & RAG | 3 |
+| 005 | Social Feed & Interactions | 3 |
+| 006 | React Frontend | 3 |
+| 007 | Advanced Auth (refresh tokens) | 3 |
 
 ## Architecture
 
